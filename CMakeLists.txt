@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.11 FATAL_ERROR )
 project(CuteCom)
 
 set (CuteCom_MAJOR_VERSION 0)
-set (CuteCom_MINOR_VERSION 40)
+set (CuteCom_MINOR_VERSION 50)
 set (CuteCom_PATCH_VERSION 0)
 set (CuteCom_VERSION
      ${CuteCom_MAJOR_VERSION}.${CuteCom_MINOR_VERSION}.${CuteCom_PATCH_VERSION})
@@ -23,12 +23,16 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
-#find_package(Serialport REQUIRED)
+find_package(Qt5SerialPort REQUIRED)
+find_package(Qt5Network REQUIRED)
 
-qt5_wrap_ui(uiHeaders controlpanel.ui  mainwindow.ui statusbar.ui sessionmanager.ui searchpanel.ui)
+qt5_wrap_ui(uiHeaders controlpanel.ui  mainwindow.ui statusbar.ui sessionmanager.ui searchpanel.ui
+    macroplugin.ui macrosettings.ui netproxyplugin.ui netproxysettings.ui counterplugin.ui)
 set(cutecomSrcs main.cpp mainwindow.cpp controlpanel.cpp  devicecombo.cpp
     serialdevicelistmodel.cpp  settings.cpp statusbar.cpp sessionmanager.cpp
-    datadisplay.cpp datahighlighter.cpp searchpanel.cpp timeview.cpp ctrlcharacterspopup.cpp)
+    datadisplay.cpp datahighlighter.cpp searchpanel.cpp timeview.cpp ctrlcharacterspopup.cpp 
+    plugin.cpp pluginmanager.cpp macroplugin.cpp macrosettings.cpp netproxyplugin.cpp netproxysettings.cpp
+    counterplugin.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # C++14: set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
@@ -45,7 +49,7 @@ endif(APPLE)
 add_executable(cutecom ${exeType} ${cutecomSrcs} ${uiHeaders} resources.qrc)
 
 
-qt5_use_modules(cutecom Core Gui Widgets SerialPort)
+target_link_libraries(cutecom Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort Qt5::Network)
 
 if (APPLE)
    set_target_properties(cutecom PROPERTIES OUTPUT_NAME CuteCom)

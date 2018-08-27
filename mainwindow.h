@@ -23,15 +23,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ui_mainwindow.h"
 #include "controlpanel.h"
-#include "sessionmanager.h"
-#include "statusbar.h"
-#include "settings.h"
 #include "ctrlcharacterspopup.h"
+#include "sessionmanager.h"
+#include "settings.h"
+#include "statusbar.h"
+#include "ui_mainwindow.h"
+#include "pluginmanager.h"
 
-#include <QMainWindow>
 #include <QFont>
+#include <QMainWindow>
 #include <QProgressDialog>
 #include <QPropertyAnimation>
 #include <QtSerialPort/QSerialPort>
@@ -76,7 +77,7 @@ protected:
     void sendFile();
     void readFromStdErr();
     void sendDone(int exitCode, QProcess::ExitStatus exitStatus);
-    void resizeEvent(QResizeEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 protected slots:
     /**
@@ -99,6 +100,7 @@ private:
 
     ControlPanel *controlPanel;
     SessionManager *m_sessionManager;
+    PluginManager *m_plugin_manager;
     QSerialPort *m_device;
     DeviceState m_deviceState;
     StatusBar *m_device_statusbar;

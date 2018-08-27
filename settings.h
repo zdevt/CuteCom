@@ -42,16 +42,21 @@ public:
         ShowTimestamp,
         CommandHistory,
         WindowGeometry,
+        WindowState,
         LogFileLocation,
         LineTermination,
         CharacterDelay,
         SendStartDir,
         ProtocolOption,
+        MacroFile,
+        UdpLocalPort,
+        UdpRemoteHost,
+        UdpRemotePort,
+        TcpLocalPort,
         CurrentSession
     };
 
-    struct Session
-    {
+    struct Session {
         QString device;
         quint32 baudRate;
         QSerialPort::DataBits dataBits;
@@ -62,6 +67,11 @@ public:
         bool showCtrlCharacters;
         bool showTimestamp;
         QStringList command_history;
+        QString macroFile;
+        quint16 udpLocalPort;
+        QString udpRemoteHost;
+        quint16 udpRemotePort;
+        quint16 tcpLocalPort;
     };
 
     enum LineTerminator { LF = 0, CR, CRLF, NONE, HEX };
@@ -77,7 +87,9 @@ public:
     QString getCurrentSessionName() const { return m_current_session; }
     void settingChanged(Settings::Options option, QVariant setting);
 
-    QRect getWindowGeometry() const;
+    QByteArray getWindowGeometry() const;
+
+    QByteArray getWindowState() const;
 
     QString getLogFileLocation() const;
 
@@ -106,7 +118,8 @@ private:
     void saveSessionSettings();
     bool readUIntSetting(QSettings &settings, QString const &name, quint32 *i);
 
-    QRect m_windowGeometry;
+    QByteArray m_windowGeometry;
+    QByteArray m_windowState;
     QString m_logFileLocation;
     /**
      * The location QFileDialog displayed for choosing a file

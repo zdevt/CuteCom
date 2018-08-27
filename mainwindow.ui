@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>320</height>
+    <width>675</width>
+    <height>684</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -199,6 +199,9 @@
          </widget>
         </item>
         <item>
+         <layout class="QVBoxLayout" name="m_pluginsLayout"/>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="m_output_layout_h">
           <property name="topMargin">
            <number>2</number>
@@ -287,8 +290,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>500</width>
-     <height>19</height>
+     <width>675</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSessions">
@@ -311,8 +314,17 @@
     </property>
     <addaction name="actionFind"/>
    </widget>
+   <widget class="QMenu" name="menuPlugins">
+    <property name="title">
+     <string>&amp;Plugins</string>
+    </property>
+    <addaction name="m_actionAddPluginMacros"/>
+    <addaction name="m_actionAddPluginIpProxy"/>
+    <addaction name="m_actionAddPluginByteCounter"/>
+   </widget>
    <addaction name="menuSessions"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPlugins"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="m_statusBar"/>
@@ -354,6 +366,32 @@
   <action name="actionFind">
    <property name="text">
     <string>Find</string>
+   </property>
+  </action>
+  <action name="m_actionPluginMacros">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Add macros</string>
+   </property>
+  </action>
+  <action name="m_actionAddPluginMacros">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>New macros</string>
+   </property>
+  </action>
+  <action name="m_actionAddPluginIpProxy">
+   <property name="text">
+    <string>New IP Proxy</string>
+   </property>
+  </action>
+  <action name="m_actionAddPluginByteCounter">
+   <property name="text">
+    <string>New byte counter</string>
    </property>
   </action>
  </widget>

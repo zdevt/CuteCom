@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Meinhard Ritscher <cyc1ingsir@gmail.com>
+ * Copyright (c) 208 Dimitris Tassopoulos <dimtass@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,43 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-#ifndef STATUSBAR_H
-#define STATUSBAR_H
+#ifndef COUNTERPLUGIN_H
+#define COUNTERPLUGIN_H
 
+#include "plugin.h"
 #include "settings.h"
-#include "ui_statusbar.h"
+#include <QDebug>
+#include <QFrame>
 
-class StatusBar : public QWidget, private Ui::StatusBar
+namespace Ui
+{
+class CounterPlugin;
+}
+
+class CounterPlugin : public QFrame
 {
     Q_OBJECT
 
 public:
-    explicit StatusBar(QWidget *parent = 0);
-    void sessionChanged(const Settings::Session &session);
-    void setDeviceInfo(const QSerialPort *port);
-    void setToolTip(const QSerialPort *port);
+    explicit CounterPlugin(QFrame *parent, Settings *settings);
+    ~CounterPlugin();
+    const Plugin *plugin();
+    //    int processCmd(const QString *text, QString *new_text);
+
+signals:
+    void sendCmd(QByteArray);
+    void unload(Plugin *);
+
+public slots:
+    void txBytes(int);
+    void rxBytes(QByteArray);
+    void removePlugin(bool);
+    void helpMsg(void);
+
+private:
+    Ui::CounterPlugin *ui;
+    Plugin *m_plugin;
+    Settings *m_settings;
 };
 
-#endif // STATUSBAR_H
+#endif // COUNTERPLUGIN_H

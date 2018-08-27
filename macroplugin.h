@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Meinhard Ritscher <cyc1ingsir@gmail.com>
+ * Copyright (c) 208 Dimitris Tassopoulos <dimtass@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,42 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-#ifndef STATUSBAR_H
-#define STATUSBAR_H
+#ifndef MACROPLUGIN_H
+#define MACROPLUGIN_H
 
+#include "macrosettings.h"
+#include "plugin.h"
 #include "settings.h"
-#include "ui_statusbar.h"
+#include <QDebug>
+#include <QFrame>
 
-class StatusBar : public QWidget, private Ui::StatusBar
+namespace Ui
+{
+class MacroPlugin;
+}
+
+class MacroPlugin : public QFrame
 {
     Q_OBJECT
 
 public:
-    explicit StatusBar(QWidget *parent = 0);
-    void sessionChanged(const Settings::Session &session);
-    void setDeviceInfo(const QSerialPort *port);
-    void setToolTip(const QSerialPort *port);
+    explicit MacroPlugin(QFrame *parent, Settings *settings);
+    virtual ~MacroPlugin();
+    const Plugin *plugin();
+    int processCmd(const QString *text);
+
+signals:
+    void sendCmd(QByteArray);
+    void unload(Plugin *);
+
+public slots:
+    void removePlugin(bool);
+
+private:
+    Ui::MacroPlugin *ui;
+    Plugin *m_plugin;
+    MacroSettings *m_macroSettings;
+    Settings *m_settings;
 };
 
-#endif // STATUSBAR_H
+#endif // MACROPLUGIN_H

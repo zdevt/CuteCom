@@ -15,7 +15,7 @@
 QT       += core gui serialport
 
 greaterThan(QT_MAJOR_VERSION, 4){
-  QT += widgets
+  QT += widgets network
   CONFIG += c++11
 }
 
@@ -25,7 +25,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    controlpanel.cpp \
     settings.cpp \
     devicecombo.cpp \
     serialdevicelistmodel.cpp \
@@ -34,7 +33,16 @@ SOURCES += main.cpp\
     datadisplay.cpp \
     datahighlighter.cpp \
     searchpanel.cpp \
-    timeview.cpp
+    timeview.cpp \
+    ctrlcharacterspopup.cpp \
+    plugin.cpp \
+    pluginmanager.cpp \
+    macroplugin.cpp \
+    macrosettings.cpp \
+    netproxyplugin.cpp \
+    netproxysettings.cpp \
+    counterplugin.cpp \
+    controlpanel.cpp
 
 HEADERS  += mainwindow.h \
     controlpanel.h \
@@ -46,17 +54,33 @@ HEADERS  += mainwindow.h \
     datadisplay.h \
     datahighlighter.h \
     searchpanel.h \
-    timeview.h
+    timeview.h \
+    ctrlcharacterspopup.h \
+    plugin.h \
+    pluginmanager.h \
+    macroplugin.h \
+    macrosettings.h \
+    netproxyplugin.h \
+    netproxysettings.h \
+    counterplugin.h \
+    counterplugin.h
 
 
 FORMS    += mainwindow.ui \
     controlpanel.ui \
     statusbar.ui \
     sessionmanager.ui \
-    searchpanel.ui
+    searchpanel.ui \
+    macroplugin.ui \
+    netproxyplugin.ui \
+    macrosettings.ui \
+    netproxysettings.ui \
+    counterplugin.ui
 
 RESOURCES += \
     resources.qrc
 
 DISTFILES += \
     qt.astylerc
+
+RC_ICONS = images/cutecom.ico

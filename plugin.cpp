@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Meinhard Ritscher <cyc1ingsir@gmail.com>
+ * Copyright (c) 208 Dimitris Tassopoulos <dimtass@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,12 @@
  * For more information on the GPL, please go to:
  * http://www.gnu.org/copyleft/gpl.html
  */
+#include <plugin.h>
 
-#ifndef STATUSBAR_H
-#define STATUSBAR_H
-
-#include "settings.h"
-#include "ui_statusbar.h"
-
-class StatusBar : public QWidget, private Ui::StatusBar
+Plugin::Plugin(QObject *owner, QString name, QFrame *frame, processCmd_fp processCmd)
+    : owner(owner)
+    , name(name)
+    , frame(frame)
+    , processCmd(processCmd)
 {
-    Q_OBJECT
-
-public:
-    explicit StatusBar(QWidget *parent = 0);
-    void sessionChanged(const Settings::Session &session);
-    void setDeviceInfo(const QSerialPort *port);
-    void setToolTip(const QSerialPort *port);
-};
-
-#endif // STATUSBAR_H
+}

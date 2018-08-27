@@ -20,10 +20,10 @@
  */
 #include "settings.h"
 
-#include <QSettings>
 #include <QHash>
-#include <QVariant>
 #include <QSerialPort>
+#include <QSettings>
+#include <QVariant>
 
 #include <qdebug.h>
 
@@ -73,7 +73,11 @@ void Settings::settingChanged(Settings::Options option, QVariant setting)
         session.command_history = setting.toStringList();
         break;
     case WindowGeometry:
-        m_windowGeometry = setting.toRect();
+        m_windowGeometry = setting.toByteArray();
+        sessionSettings = false;
+        break;
+    case WindowState:
+        m_windowState = setting.toByteArray();
         sessionSettings = false;
         break;
     case LogFileLocation:
@@ -95,6 +99,21 @@ void Settings::settingChanged(Settings::Options option, QVariant setting)
     case SendStartDir:
         m_sendingStartDir = setting.toString();
         sessionSettings = false;
+        break;
+    case MacroFile:
+        session.macroFile = setting.toString();
+        break;
+    case UdpLocalPort:
+        session.udpLocalPort = setting.toUInt();
+        break;
+    case UdpRemoteHost:
+        session.udpRemoteHost = setting.toString();
+        break;
+    case UdpRemotePort:
+        session.udpRemotePort = setting.toUInt();
+        break;
+    case TcpLocalPort:
+        session.tcpLocalPort = setting.toUInt();
         break;
     case CurrentSession:
         m_current_session = setting.toString();
@@ -173,6 +192,11 @@ void Settings::readSessionSettings(QSettings &settings)
         session.showCtrlCharacters = settings.value("showCtrlCharacters", false).toBool();
         session.showTimestamp = settings.value("showTimestamp", false).toBool();
         session.command_history = settings.value("History").toStringList();
+        session.macroFile = settings.value("MacroFile", "").toString();
+        session.udpLocalPort = settings.value("UdpLocalPort", 7755).toUInt();
+        session.udpRemoteHost = settings.value("UdpRemoteHost", "").toString();
+        session.udpRemotePort = settings.value("UdpRemotePort", 7756).toUInt();
+        session.tcpLocalPort = settings.value("TcpLocalPort", 7755).toUInt();
 
         m_sessions.insert(name, session);
     }
@@ -210,7 +234,8 @@ void Settings::readSettings(const QString &session)
     }
     qDebug() << "setting current session to: " << m_current_session;
 
-    m_windowGeometry = settings.value("WindowGeometry", QRect(0, 0, 0, 0)).toRect();
+    m_windowGeometry = settings.value("WindowGeometry", QByteArray()).toByteArray();
+    m_windowState = settings.value("WindowState", QByteArray()).toByteArray();
     m_logFileLocation = settings.value("LogFileLocation").toString();
     if (m_logFileLocation.isEmpty()) {
         m_logFileLocation = QDir::homePath() + QDir::separator() + QStringLiteral("cutecom.log");
@@ -247,7 +272,6 @@ const Settings::Session Settings::getCurrentSession()
         session.flowControl = QSerialPort::NoFlowControl;
         m_sessions.insert(m_current_session, session);
     }
-
     return m_sessions.value(m_current_session);
 }
 
@@ -257,6 +281,7 @@ void Settings::saveGenericSettings()
     settings.beginGroup("CuteCom");
     // store generic fluff
     settings.setValue("WindowGeometry", m_windowGeometry);
+    settings.setValue("WindowState", m_windowState);
     settings.setValue("LogFileLocation", m_logFileLocation);
 
     // save session releated settings
@@ -299,6 +324,11 @@ void Settings::saveSessionSettings()
             settings.setValue("showCtrlCharacters", session.showCtrlCharacters);
             settings.setValue("showTimestamp", session.showTimestamp);
             settings.setValue("History", session.command_history);
+            settings.setValue("MacroFile", session.macroFile);
+            settings.setValue("UdpLocalPort", session.udpLocalPort);
+            settings.setValue("UdpRemoteHost", session.udpRemoteHost);
+            settings.setValue("UdpRemotePort", session.udpRemotePort);
+            settings.setValue("TcpLocalPort", session.tcpLocalPort);
         }
         settings.endArray();
     }
@@ -348,4 +378,6 @@ QList<QString> Settings::getSessionNames() const
     return sessions;
 }
 
-QRect Settings::getWindowGeometry() const { return m_windowGeometry; }
+QByteArray Settings::getWindowGeometry() const { return m_windowGeometry; }
+
+QByteArray Settings::getWindowState() const { return m_windowState; }

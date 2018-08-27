@@ -5,6 +5,7 @@
  * Copyright (c) 2015 Meinhard Ritscher <cyc1ingsir@gmail.com>
  * Copyright (c) 2015 Antoine Calando <acalando@free.fr> (improvements added to original CuteCom)
  * Copyright (c) 2017 Slawomir Pabian <sla.pab.dev@gmail.com>
+ * Copyright (c) 2018 Dimitris Tassopoulos <dimtass@gmail.com> (added macros)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,21 +27,22 @@
 
 #include "mainwindow.h"
 #include "datadisplay.h"
-#include "version.h"
-#include "settings.h"
 #include "qdebug.h"
+#include "settings.h"
+#include "version.h"
 
-#include <QTime>
-#include <QTimer>
-#include <QThread>
 #include <QCompleter>
 #include <QDialog>
 #include <QFileDialog>
-#include <QResizeEvent>
 #include <QMessageBox>
-#include <QSpinBox>
-#include <QScrollBar>
 #include <QProgressDialog>
+#include <QResizeEvent>
+#include <QScrollBar>
+#include <QShortcut>
+#include <QSpinBox>
+#include <QThread>
+#include <QTime>
+#include <QTimer>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
@@ -91,10 +93,15 @@ MainWindow::MainWindow(QWidget *parent, const QString &session)
     m_settings->readSettings(session);
     this->setWindowTitle("CuteCom - " + m_settings->getCurrentSessionName());
 
-    // restore window size from the settings
-    QRect geometry = m_settings->getWindowGeometry();
-    if (geometry.width() > 0)
-        setGeometry(geometry);
+    // restore window geometry and state from the settings
+    QByteArray geometry = m_settings->getWindowGeometry();
+    if (geometry.size() > 0) {
+        restoreGeometry(geometry);
+    }
+    QByteArray winState = m_settings->getWindowState();
+    if (winState.size() > 0) {
+        restoreState(winState);
+    }
 
     QStringList history = m_settings->getCurrentSession().command_history;
     if (!history.empty()) {
@@ -165,7 +172,7 @@ MainWindow::MainWindow(QWidget *parent, const QString &session)
     // make sure there is enough space for the collapsed panel
     // above all other widgets
     int hHeight = controlPanel->hiddenHeight();
-    qDebug() << Q_FUNC_INFO << "calculated height: " << hHeight;
+    //    qDebug() << Q_FUNC_INFO << "calculated height: " << hHeight;
     mainMargins.setTop(hHeight);
     m_verticalLayout->setContentsMargins(mainMargins);
     m_mainSplitter->installEventFilter(this);
@@ -222,6 +229,26 @@ MainWindow::MainWindow(QWidget *parent, const QString &session)
 
     connect(controlPanel->m_rts_line, &QCheckBox::stateChanged, this, &MainWindow::setRTSLineState);
     connect(controlPanel->m_dtr_line, &QCheckBox::stateChanged, this, &MainWindow::setDTRLineState);
+
+    /* Load plugin manager */
+    m_plugin_manager = new PluginManager(this->frame_output, this->m_pluginsLayout, m_settings);
+
+    /* add signal for adding new plugins. Every plugin must have an action to the app menu */
+    connect(m_actionAddPluginMacros, &QAction::triggered, this,
+            [=]() { m_plugin_manager->addPluginType(PluginManager::en_plugin_type::PLUGIN_TYPE_MACROS); });
+    connect(m_actionAddPluginIpProxy, &QAction::triggered, this,
+            [=]() { m_plugin_manager->addPluginType(PluginManager::en_plugin_type::PLUGIN_TYPE_NET_PROXY); });
+    connect(m_actionAddPluginByteCounter, &QAction::triggered, this,
+            [=]() { m_plugin_manager->addPluginType(PluginManager::en_plugin_type::PLUGIN_TYPE_BYTE_COUNTER); });
+    /* connect plugins sendCmd with the main window interface. As it is now, for the cmd history to
+     * work properly, we must involve m_input_edit and then run execCmd();
+     */
+    connect(m_plugin_manager, &PluginManager::sendCmd, this, [=](QString cmd) {
+        this->m_input_edit->setText(cmd);
+        this->execCmd();
+    });
+    QShortcut *shortcutToggleControlPanel = new QShortcut(QKeySequence(tr("Alt+S", "shortcut")), this);
+    connect(shortcutToggleControlPanel, &QShortcut::activated, controlPanel, &ControlPanel::toggleMenu);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -304,10 +331,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     return false;
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::closeEvent(QCloseEvent *event)
 {
-    QMainWindow::resizeEvent(event);
-    m_settings->settingChanged(Settings::WindowGeometry, this->frameGeometry());
+    m_settings->settingChanged(Settings::WindowGeometry, this->saveGeometry());
+    m_settings->settingChanged(Settings::WindowState, this->saveState());
+    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::openDevice()
@@ -381,6 +409,7 @@ void MainWindow::closeDevice()
     m_command_history->setEnabled(false);
     if (m_logFile.isOpen()) {
         m_logFile.flush();
+        m_logFile.close();
     }
 }
 
@@ -428,12 +457,19 @@ void MainWindow::printDeviceInfo()
 
 void MainWindow::toggleLogging(bool start)
 {
-    if (m_logFile.isOpen() == start) {
+    QString currentLogFileName = m_lb_logfile->text();
+
+    if (m_logFile.isOpen() == start && m_logFile.fileName() == currentLogFileName) {
         return;
     }
 
     if (start) {
-        m_logFile.setFileName(m_lb_logfile->text());
+        if (m_logFile.fileName() != currentLogFileName) {
+            m_logFile.flush();
+            m_logFile.close();
+            m_logFile.setFileName(m_lb_logfile->text());
+        }
+
         QIODevice::OpenMode mode = QIODevice::ReadWrite;
         mode = (controlPanel->m_check_appendLog->isChecked()) ? mode | QIODevice::Append : mode | QIODevice::Truncate;
 
@@ -479,6 +515,8 @@ void MainWindow::fillLineTerminationChooser(const Settings::LineTerminator setti
 
         // inform CtrlCharactersPopup widget about this change
         m_ctrlCharactersPopup->setHexInsertionMode(Settings::LineTerminator::HEX == currentValue);
+
+        m_settings->settingChanged(Settings::LineTermination, currentValue);
     });
 }
 
@@ -511,7 +549,8 @@ void MainWindow::showAboutMsg()
     QMessageBox::about(this, tr("About CuteCom"),
                        tr("This is CuteCom %1<br>(c)2004-2009 Alexander Neundorf, &lt;neundorf@kde.org&gt;"
                           "<br>(c)2015 Meinhard Ritscher, &lt;unreachable@gmx.net&gt;<br> and contributors"
-                          "<br>Licensed under the GNU GPL version 3 (or any later version).").arg(CuteCom_VERSION));
+                          "<br>Licensed under the GNU GPL version 3 (or any later version).")
+                           .arg(CuteCom_VERSION));
 }
 
 void MainWindow::prevCmd()
@@ -575,7 +614,6 @@ void MainWindow::execCmd()
     if (!m_device->isOpen()) {
         return;
     }
-
     sendString(cmd);
 }
 
@@ -601,6 +639,9 @@ bool MainWindow::sendString(const QString &s)
     Settings::LineTerminator lineMode = m_combo_lineterm->currentData().value<Settings::LineTerminator>();
     // ToDo
     unsigned int charDelay = m_spinner_chardelay->value();
+
+    /* allow plugins to process the output data */
+    m_plugin_manager->processCmd((QString *)&s);
 
     if (lineMode == Settings::HEX) // hex
     {
@@ -662,7 +703,8 @@ bool MainWindow::sendString(const QString &s)
         return true;
     }
 
-    // converts QString into QByteArray, this supports converting control characters being shown in input field as QChars
+    // converts QString into QByteArray, this supports converting control characters being shown in input field as
+    // QChars
     // of Control Pictures from Unicode block.
     QByteArray bytes;
     bytes.reserve(s.size());
@@ -842,7 +884,8 @@ void MainWindow::sendFile()
             openDevice();
             return;
         }
-        m_progress = new QProgressDialog(tr("Sending file via %1 ...").arg(m_combo_protocol->currentText()), tr("Cancel"), 0, 100, this);
+        m_progress = new QProgressDialog(tr("Sending file via %1 ...").arg(m_combo_protocol->currentText()),
+                                         tr("Cancel"), 0, 100, this);
         connect(m_progress, &QProgressDialog::canceled, this, &MainWindow::killSz);
         m_progress->setMinimumDuration(100);
         QFileInfo fi(filename);
@@ -971,8 +1014,10 @@ void MainWindow::processData()
 
     if (m_logFile.isOpen()) {
         m_logFile.write(data);
+        m_logFile.flush();
     }
     m_output_display->displayData(data);
+    emit m_plugin_manager->recvCmd(data);
 }
 
 void MainWindow::removeSelectedInputItems(bool checked)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Meinhard Ritscher <cyc1ingsir@gmail.com>
+ * Copyright (c) 208 Dimitris Tassopoulos <dimtass@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,34 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-#ifndef STATUSBAR_H
-#define STATUSBAR_H
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
-#include "settings.h"
-#include "ui_statusbar.h"
+#include <QFrame>
+#include <QObject>
+#include <QString>
 
-class StatusBar : public QWidget, private Ui::StatusBar
+class Plugin : public QObject
 {
     Q_OBJECT
-
 public:
-    explicit StatusBar(QWidget *parent = 0);
-    void sessionChanged(const Settings::Session &session);
-    void setDeviceInfo(const QSerialPort *port);
-    void setToolTip(const QSerialPort *port);
+    typedef int (*processCmd_fp)(const QString *text, QString *new_text);
+
+    Plugin(QObject *owner,                 /* who owns the plugin */
+           QString name,                   /* name of plugin */
+           QFrame *frame = NULL,           /* Does the plugin has a UI interface? */
+           processCmd_fp processCmd = NULL /* function that injects the cmd */
+    );
+
+    ~Plugin() {}
+
+    QObject *owner;
+    QString name;
+    QFrame *frame;
+    processCmd_fp processCmd;
+
+signals:
+    void sendCmd(QString);
 };
 
-#endif // STATUSBAR_H
+#endif // PLUGIN_H

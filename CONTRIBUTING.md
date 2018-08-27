@@ -2,6 +2,9 @@
 
 Pull requests are welcome.
 Please do not hesitate to add yourselfs to CREDITS file!
+Please do not forget to update the ChangeLog!
+Please do not forget to add a licence header to each new file as well
+as add yourself to the authors list of the files you have modified.
 If you are looking for ideas check the TODO file.
 Automated (unit) tests would be a real cool feature.
 
@@ -13,7 +16,7 @@ If you do it to your fork, a centralized build will start and your changes will 
 ### Supported Qt Version
 CuteCom Version 0.3x was the first version based on Qt5. Originally it was developed using Qt 5.3.
 Reported in issue #8 there are still users relying on Qt5 in a version less then 5.3.
-Travis is currently setup to test the code against Qt version 5.4
+Travis is currently setup to test the code against Qt version 5.9
 (https://travis-ci.org/cyc1ingsir/cutecom).
 
 Please verify, that your CRs don't rely on a higher Qt version. 
@@ -59,11 +62,11 @@ BreakBeforeBinaryOperators: true
 ```
 
 ### clang-format on CLI
-This is based on clang-format version 3.5.0:
+This is based on clang-format version 3.8.0:
 
 `>clang-format --version`
 
-clang-format version 3.5.0 (tags/RELEASE_350/final 216961)
+clang-format version 3.8.0 (tags/RELEASE_350/final 216961)
 
 ```
 > clang-format  -i -style="{BasedOnStyle: llvm, ColumnLimit: 120, IndentWidth: 4, Standard: Cpp11, PointerBindsToType: false, BreakBeforeBraces: Linux, BreakConstructorInitializersBeforeComma: true, AccessModifierOffset: -4, BreakBeforeBinaryOperators: true}" mainwindow.cpp
